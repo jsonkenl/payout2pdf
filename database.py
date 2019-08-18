@@ -1,35 +1,70 @@
 import sqlite3
+from sqlite3 import Error
 
 class Database:
     def __init__(self, db_file):
         self.conn = self.__create_conn(db_file)
+
         if self.conn is not None:
-            self.c = self.conn.cursor()
-            self.__create_table(self.c, self.__payout_table())
-            self.__create_table(self.c, self.__well_data_table())
-            self.conn.commit()
+            self.__create_table(self.__payout_table())
+            self.__create_table(self.__well_data_table())
         else:
             print("Error! Cannot connect to the database.")
+    
+    def view_all(self):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM payouts")
+        return c.fetchall()
+    
+    def insert_payout(self, payout_tuple):
+        sql = ''' INSERT INTO payouts(c_stmt_date,p_stmt_date,operator,type,owner,idc,equip,loe,wo,mkt,timestamp)
+                 VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
+        c = self.conn.cursor()
+        c.execute(sql, payout_tuple)
+        self.conn.commit()
+        return c.lastrowid
+
+    def insert_wells(self, wells_touple):
+        sql = ''' INSERT INTO wells(name,well_id,api,beg_gas_vol,pd_gas_vol,end_gas_vol,beg_cond_vol,pd_cond_vol,end_cond_vol,beg_ngl_vol,pd_ngl_vol,end_ngl_vol,
+                  beg_gas_rev,pd_gas_rev,end_gas_rev,beg_cond_rev,pd_cond_rev,end_cond_rev,beg_ngl_rev,pd_ngl_rev,end_ngl_rev,beg_rev_total,pd_rev_total,end_rev_total,
+                  beg_royalty,pd_royalty,end_royalty,beg_tax,pd_tax,end_tax,beg_net_rev,pd_net_rev,end_net_rev,beg_idc_icc,pd_idc_icc,end_idc_icc,beg_equip,pd_equip,
+                  end_equip,beg_loe,pd_loe,end_loe,beg_wo,pd_wo,end_wo,beg_mkt,pd_mkt,end_mkt,beg_exp_total,pd_exp_total,end_exp_total,payout,payout_id,timestamp)
+                  VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '''
+        c = self.conn.cursor()
+        c.execute(sql, wells_touple)
+        self.conn.commit()
+
+    def search_wells_by_payout(self, payout_id):
+        c = self.conn.cursor()
+        c.execute("SELECT * FROM wells WHERE payout_id=?", (payout_id,))
+        return c.fetchall()
+    
+    def delete(self, id):
+        c = self.conn.cursor()
+        c.execute("DELETE FROM payouts WHERE id=?", (id,))
+        c.execute("DELETE FROM wells WHERE payout_id=?", (id,))
+        self.conn.commit()
 
     def __create_conn(self, db_file):
         try:
             conn = sqlite3.connect(db_file)
             return conn
-        except Exception as e:
+        except Error as e:
             print(e)
-        return None
+            return None
 
-    def __create_table(self, c, create_table_statement):
+    def __create_table(self, create_table_statement):
         try:
+            c = self.conn.cursor()
             c.execute(create_table_statement)
-        except Exception as e:
+        except Error as e:
             print(e)
 
     def __payout_table(self):
         return ("CREATE TABLE IF NOT EXISTS payouts ("
                     "id INTEGER PRIMARY KEY, "
-                    "current_stmt_date TEXT, "
-                    "prior_stmt_date TEXT, "
+                    "c_stmt_date TEXT, "
+                    "p_stmt_date TEXT, "
                     "operator TEXT, "
                     "type TEXT, "
                     "owner TEXT, "
@@ -100,3 +135,9 @@ class Database:
                         "FOREIGN KEY (payout_id) REFERENCES payouts (id))")
 
 db = Database("payouts.db")
+# id = db.insert_payout(("01/01/2019", "03/01/2019", "Laramie Energy LLC", "Unknown", "Terra Energy Partners", 100.0, 100.0, 100.0, 100.0, 100.0, "08/13/2019 00:12:30"))
+# print(id)
+# w_touple = ("Well Name", 50123, "0512345678") + (0.0,) * 49 + (1, "01/01/2019 01:12:03")
+# db.insert_wells(w_touple)
+
+# db.delete(1)
