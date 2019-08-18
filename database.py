@@ -2,8 +2,8 @@ import sqlite3
 from sqlite3 import Error
 
 class Database:
-    def __init__(self, db_file):
-        self.conn = self.__create_conn(db_file)
+    def __init__(self):
+        self.conn = self.__create_conn("payouts.db")
 
         if self.conn is not None:
             self.__create_table(self.__payout_table())
@@ -19,19 +19,23 @@ class Database:
     def insert_payout(self, payout_tuple):
         sql = ''' INSERT INTO payouts(c_stmt_date,p_stmt_date,operator,type,owner,idc,equip,loe,wo,mkt,timestamp)
                  VALUES(?,?,?,?,?,?,?,?,?,?,?) '''
+
         c = self.conn.cursor()
         c.execute(sql, payout_tuple)
         self.conn.commit()
         return c.lastrowid
 
-    def insert_wells(self, wells_touple):
-        sql = ''' INSERT INTO wells(name,well_id,api,beg_gas_vol,pd_gas_vol,end_gas_vol,beg_cond_vol,pd_cond_vol,end_cond_vol,beg_ngl_vol,pd_ngl_vol,end_ngl_vol,
-                  beg_gas_rev,pd_gas_rev,end_gas_rev,beg_cond_rev,pd_cond_rev,end_cond_rev,beg_ngl_rev,pd_ngl_rev,end_ngl_rev,beg_rev_total,pd_rev_total,end_rev_total,
-                  beg_royalty,pd_royalty,end_royalty,beg_tax,pd_tax,end_tax,beg_net_rev,pd_net_rev,end_net_rev,beg_idc_icc,pd_idc_icc,end_idc_icc,beg_equip,pd_equip,
-                  end_equip,beg_loe,pd_loe,end_loe,beg_wo,pd_wo,end_wo,beg_mkt,pd_mkt,end_mkt,beg_exp_total,pd_exp_total,end_exp_total,payout,payout_id,timestamp)
+    def insert_well(self, well_touple):
+        sql = ''' INSERT INTO wells(name,well_id,api,beg_gas_vol,pd_gas_vol,end_gas_vol,beg_cond_vol,pd_cond_vol,end_cond_vol,
+                  beg_ngl_vol,pd_ngl_vol,end_ngl_vol,beg_gas_rev,pd_gas_rev,end_gas_rev,beg_cond_rev,pd_cond_rev,end_cond_rev,
+                  beg_ngl_rev,pd_ngl_rev,end_ngl_rev,beg_rev_total,pd_rev_total,end_rev_total,beg_royalty,pd_royalty,end_royalty,
+                  beg_tax,pd_tax,end_tax,beg_net_rev,pd_net_rev,end_net_rev,beg_idc_icc,pd_idc_icc,end_idc_icc,beg_equip,pd_equip,
+                  end_equip,beg_loe,pd_loe,end_loe,beg_wo,pd_wo,end_wo,beg_mkt,pd_mkt,end_mkt,beg_exp_total,pd_exp_total,end_exp_total,
+                  payout,payout_id,timestamp)
                   VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) '''
+
         c = self.conn.cursor()
-        c.execute(sql, wells_touple)
+        c.execute(sql, well_touple)
         self.conn.commit()
 
     def search_wells_by_payout(self, payout_id):
@@ -134,7 +138,7 @@ class Database:
                         "timestamp TEXT NOT NULL, "
                         "FOREIGN KEY (payout_id) REFERENCES payouts (id))")
 
-db = Database("payouts.db")
+# db = Database()
 # id = db.insert_payout(("01/01/2019", "03/01/2019", "Laramie Energy LLC", "Unknown", "Terra Energy Partners", 100.0, 100.0, 100.0, 100.0, 100.0, "08/13/2019 00:12:30"))
 # print(id)
 # w_touple = ("Well Name", 50123, "0512345678") + (0.0,) * 49 + (1, "01/01/2019 01:12:03")

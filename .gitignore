@@ -1,2 +1,4 @@
 *.xlsx
 *.db
+jupyter/*
+__pycache__/*
