@@ -2,3 +2,4 @@
 *.db
 jupyter/*
 __pycache__/*
+*.pdf
