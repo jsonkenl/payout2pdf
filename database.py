@@ -47,8 +47,9 @@ class Database:
 
     def search_payouts(self, owner="", timestamp=""):
         timestamp = '%'+timestamp+'%' if timestamp != "" else timestamp
+        owner = '%'+owner+'%' if owner != "" else owner
         c = self.conn.cursor()
-        c.execute('SELECT * FROM payouts WHERE owner=? OR timestamp LIKE ?', 
+        c.execute('SELECT * FROM payouts WHERE owner LIKE ? OR timestamp LIKE ?', 
             (owner, timestamp))
         return c.fetchall()
 

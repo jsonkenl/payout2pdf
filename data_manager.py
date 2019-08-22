@@ -8,8 +8,12 @@ class DataManager:
         self.db = Database()
 
     def create_payout_record(self, file_path, payout_data):
-        payout_id = self.db.insert_payout(payout_data)
-        self.__import_file_to_db(file_path, payout_id)
+        try: 
+            payout_id = self.db.insert_payout(payout_data)
+            self.__import_file_to_db(file_path, payout_id)
+            return 'ok'
+        except:
+            return 'data_import_error'
 
     def __import_file_to_db(self, file_path, payout_id):
         try:
@@ -30,13 +34,11 @@ class DataManager:
                                datetime.datetime.now()) 
                 
                 self.db.insert_well(well_touple)
+                return 'ok'
 
         except FileNotFoundError:
-            print("""Payout2PDF is unable to locate the selected file: 
-                FileNotFoundError""")
+            return 'FileNotFoundError'
         except XLRDError:
-            print("""Payout2PDF is unable to read the format of the selected 
-                file or the file is corrupt: XLRDError""")
+            return 'XLRDError'
         except Exception as e:
-            print("""Payout2PDF crashed. Please provide the following error 
-                information to your system admin: """ + e)
+            return e

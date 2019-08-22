@@ -1,11 +1,15 @@
+import datetime
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 from database import Database
+from data_manager import DataManager
 
 class Payout2PDF:
     def __init__(self):
         self.db = Database()
+        self.dm = DataManager()
         self.__create_GUI()        
 
     def search_command(self):
@@ -23,7 +27,7 @@ class Payout2PDF:
         self.file_path_entry.configure(state='disabled')
 
     def upload_command(self):
-        payout_tuple = (
+        payout_data = (
             self.current_date_text.get(),
             self.previous_date_text.get(),
             self.operator_text.get(),
@@ -34,11 +38,23 @@ class Payout2PDF:
             self.loe_text.get(),
             self.wo_text.get(),
             self.mktg_text.get(),
+            datetime.datetime.now(),
             self.file_path_text.get()
         )
 
-        print(payout_tuple)
+        file_path = payout_data[-1]
+        payout_tuple = payout_data[:-1]
+        result = self.dm.create_payout_record(file_path, payout_tuple)
 
+        if result == 'ok':
+            self.tab_control.select(self.reports_tab)
+            messagebox.showinfo("Upload Status", "File successfully uploaded.")
+        else:
+            messagebox.showerror(
+                    "Upload Status", 
+                    "There was an issue uploading your file: " + result
+                ) 
+   
     def cancel_upload_command(self):
         self.tab_control.select(self.reports_tab)
 
