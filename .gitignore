@@ -3,3 +3,7 @@
 jupyter/*
 __pycache__/*
 *.pdf
+build/*
+dist/*
+*.spec
+*.png

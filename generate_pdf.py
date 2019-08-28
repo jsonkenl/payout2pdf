@@ -1,3 +1,4 @@
+import sys, os
 from reportlab.pdfgen import canvas
 
 class GeneratePDF:
@@ -94,6 +95,14 @@ class GeneratePDF:
 
     def output_file(self):
         self.c.save()
+
+    def resource_path(self, relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
     
     def __set_font(self, size, font='Helvetica', color='black'):
         rgb = {
@@ -225,7 +234,7 @@ class GeneratePDF:
                 (335, 670, "Balance"),
                 (515, 670, "Balance")
             ])
-        self.c.drawImage("logo_burned.png", 460, 720, 64, 76)
+        self.c.drawImage(self.resource_path("logo_burned.png"), 460, 720, 64, 76)
         self.c.setLineWidth(0.8)
         self.__draw_lines([
                 (390, 650, 460, 650),
