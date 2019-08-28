@@ -14,10 +14,23 @@ class Payout2PDF:
 
     def search_command(self):
         self.listbox.delete(0, END)
-        for row in self.db.search_payouts(self.owner_text.get(), 
-            self.date_text.get()):
-                self.listbox.insert(END, 
-                    str(row[0]) + "     " + row[11] + "        " + row[5])
+        for row in self.db.search_payouts(
+                self.owner_text.get(), 
+                self.date_text.get()
+            ):
+                self.listbox.insert(
+                        END, 
+                        str(row[0]) 
+                        + " " * 5 
+                        + self.__format_date(row[11])
+                        + " " * 8 
+                        + row[5]
+                    )
+    
+    def cancel_search_command(self):
+        self.__view_all_payout_records()
+        self.date_entry.delete(0, END)
+        self.owner_entry.delete(0, END)
    
     def select_file_command(self):
         self.file_path = filedialog.askopenfilename()
@@ -25,6 +38,20 @@ class Payout2PDF:
         self.file_path_entry.delete(0, END)
         self.file_path_entry.insert(END, self.file_path)
         self.file_path_entry.configure(state='disabled')
+
+    def create_pdf_command(self):
+        title = "Create PDF Status"
+        msg1 = "PDF successfully created."
+        msg2 = "An error has occurred. The requested PDF was not generated."
+        id = self.selected_tuple[0]
+        folder_path = self.__select_folder()
+        result = self.dm.create_pdf(folder_path, id)
+
+        if result == 'ok':
+            self.__view_all_payout_records()
+            messagebox.showinfo(title, msg1)
+        else:
+            messagebox.showerror(title, msg2 + result)
 
     def upload_command(self):
         payout_data = (
@@ -42,39 +69,80 @@ class Payout2PDF:
             self.file_path_text.get()
         )
 
+        title = "Upload Status"
+        msg1 = "File successfully uploaded."
+        msg2 = "There was an issue uploading your file: "
         file_path = payout_data[-1]
         payout_tuple = payout_data[:-1]
         result = self.dm.create_payout_record(file_path, payout_tuple)
 
         if result == 'ok':
+            self.__clear_new_tab()
             self.tab_control.select(self.reports_tab)
-            messagebox.showinfo("Upload Status", "File successfully uploaded.")
+            self.__view_all_payout_records()
+            messagebox.showinfo(title, msg1)
         else:
-            messagebox.showerror(
-                    "Upload Status", 
-                    "There was an issue uploading your file: " + result
-                ) 
+            messagebox.showerror(title, msg2 + result)
    
     def cancel_upload_command(self):
+        self.__clear_new_tab()
         self.tab_control.select(self.reports_tab)
 
     def delete_command(self):
-        self.db.delete(self.selected_tuple[0])
-        self.__view_all_payout_records()
+        title = "Confirm Delete"
+        msg = "Are you sure you want to delete this record?"
+
+        if messagebox.askyesno(title, msg):
+            self.db.delete(self.selected_tuple[0])
+            self.__view_all_payout_records()
 
     def __get_selected_row(self, event):
         try:
             index = self.listbox.curselection()[0]
             self.selected_tuple = self.listbox.get(index)
-            print(self.selected_tuple[0])
         except IndexError:
-            pass
+            messagebox.showerror("Select Error", "Unable to select row.") 
+
+    def __select_folder(self):
+        return filedialog.askdirectory()
 
     def __view_all_payout_records(self):
         self.listbox.delete(0, END)
         for row in self.db.view_all():
-            self.listbox.insert(END, 
-                str(row[0]) + "     " + row[11] + "        " + row[5])
+            self.listbox.insert(
+                    END, 
+                    str(row[0]) 
+                    + " " * 5  
+                    + self.__format_date(row[11]) 
+                    + " " * 8 
+                    + row[5]
+                )
+
+    def __format_date(self, date):
+        try:
+            new_date = date[5:7] + "/" + date[8:10] + "/" + date[2:4] + " "
+            if int(date[11:13]) > 12:
+                time = str(int(date[11:13]) - 12) + ":" + date[14:16] + " PM"
+            else:
+                time = date[11:13] + ":" + date[14:16] + " AM"
+            return new_date + time 
+        except:
+            return "Error"
+
+    def __clear_new_tab(self):
+            self.current_date_entry.delete(0, END)
+            self.previous_date_entry.delete(0, END)
+            self.operator_entry.delete(0, END)
+            self.payout_type_entry.delete(0, END)
+            self.add_owner_entry.delete(0, END)
+            self.idc_entry.delete(0, END)
+            self.equipment_entry.delete(0, END)
+            self.loe_entry.delete(0, END)
+            self.wo_entry.delete(0, END)
+            self.mktg_entry.delete(0, END)
+            self.file_path_entry.configure(state='normal')
+            self.file_path_entry.delete(0, END)
+            self.file_path_entry.configure(state='disabled')
 
     def __create_GUI(self):
         w = Tk()
@@ -134,7 +202,7 @@ class Payout2PDF:
                 self.reports_tab, 
                 text='X', 
                 width=3,
-                command=self.__view_all_payout_records
+                command=self.cancel_search_command
             )
         clear_btn.grid(row=3, column=3)
 
@@ -160,7 +228,12 @@ class Payout2PDF:
             )
         delete_btn.grid(row=12, column=0)
 
-        pdf_btn = ttk.Button(self.reports_tab, text='Generate PDF', width=20)
+        pdf_btn = ttk.Button(
+                self.reports_tab, 
+                text='Generate PDF', 
+                width=20,
+                command=self.create_pdf_command
+            )
         pdf_btn.grid(row=12, column=1)
 
         close_btn = ttk.Button(

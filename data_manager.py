@@ -2,6 +2,7 @@ import pandas
 import datetime
 from xlrd import XLRDError
 from database import Database
+from generate_pdf import GeneratePDF
 
 class DataManager:
     def __init__(self):
@@ -12,8 +13,35 @@ class DataManager:
             payout_id = self.db.insert_payout(payout_data)
             self.__import_file_to_db(file_path, payout_id)
             return 'ok'
-        except:
-            return 'data_import_error'
+        except Exception as e:
+            print(e)
+            return 'DataImportError'
+
+    def create_pdf(self, folder_path, payout_id):
+        try:
+            file_path = (
+                    folder_path + "/" + "LE Payout Report " 
+                        + str(datetime.datetime.now())[:19].replace(":",".")
+                        + ".pdf" 
+                )
+            pdf = GeneratePDF(file_path)
+            payout = self.db.search_payout(payout_id)[0]
+            wells = self.db.search_wells_by_payout(payout_id)
+            initial_row = True
+
+            for w in wells:
+                if initial_row:
+                    initial_row = False
+                    pdf.apply_data(payout, w)
+                else:
+                    pdf.next_page()
+                    pdf.apply_data(payout, w)
+
+            pdf.output_file()
+            return 'ok'
+        except Exception as e:
+            print(e)
+            return 'PDFCreationError'
 
     def __import_file_to_db(self, file_path, payout_id):
         try:
@@ -34,11 +62,12 @@ class DataManager:
                                datetime.datetime.now()) 
                 
                 self.db.insert_well(well_touple)
-                return 'ok'
+            return 'ok'
 
         except FileNotFoundError:
             return 'FileNotFoundError'
         except XLRDError:
             return 'XLRDError'
         except Exception as e:
-            return e
+            print(e)
+            return 'UnknownImportError' 

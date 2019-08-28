@@ -53,6 +53,11 @@ class Database:
             (owner, timestamp))
         return c.fetchall()
 
+    def search_payout(self, id):
+        c = self.conn.cursor()
+        c.execute('SELECT * FROM payouts WHERE id=?', (id,))
+        return c.fetchall()
+
     def search_wells_by_payout(self, payout_id):
         c = self.conn.cursor()
         c.execute('SELECT * FROM wells WHERE payout_id=?', (payout_id,))
@@ -152,7 +157,3 @@ class Database:
                         'payout_id INTEGER NOT NULL, '
                         'timestamp TEXT NOT NULL, '
                         'FOREIGN KEY (payout_id) REFERENCES payouts (id))')
-
-# db = Database()
-# tuple = ("12/31/2018", "01/01/2018", "Laramie Energy LLC", "Unknown", "Encana", 100, 100, 100, 100, 100, "08/01/2019")
-# db.insert_payout(tuple)
