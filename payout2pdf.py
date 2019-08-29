@@ -14,19 +14,12 @@ class Payout2PDF:
 
     def search_command(self):
         self.listbox.delete(0, END)
-        for row in self.db.search_payouts(
-                self.owner_text.get(), 
-                self.date_text.get()
-            ):
-                self.listbox.insert(
-                        END, 
-                        str(row[0]) 
-                        + " " * 5 
-                        + self.__format_date(row[11])
-                        + " " * 8 
-                        + row[5]
-                    )
-    
+        owner = self.owner_text.get()
+        date = self.date_text.get()
+        
+        for row in self.db.search_payouts(owner, date):
+            self.__print_row(row)
+                    
     def cancel_search_command(self):
         self.__view_all_payout_records()
         self.date_entry.delete(0, END)
@@ -43,7 +36,7 @@ class Payout2PDF:
         title = "Create PDF Status"
         msg1 = "PDF successfully created."
         msg2 = "An error has occurred. The requested PDF was not generated."
-        id = self.selected_tuple[0]
+        id = self.selected_tuple[0:4]
         folder_path = self.__select_folder()
         result = self.dm.create_pdf(folder_path, id)
 
@@ -68,21 +61,26 @@ class Payout2PDF:
             datetime.datetime.now(),
             self.file_path_text.get()
         )
-
+        
         title = "Upload Status"
         msg1 = "File successfully uploaded."
         msg2 = "There was an issue uploading your file: "
-        file_path = payout_data[-1]
-        payout_tuple = payout_data[:-1]
-        result = self.dm.create_payout_record(file_path, payout_tuple)
+        msg3 = "All text boxes must contain a value."
 
-        if result == 'ok':
-            self.__clear_new_tab()
-            self.tab_control.select(self.reports_tab)
-            self.__view_all_payout_records()
-            messagebox.showinfo(title, msg1)
+        if all(payout_data):
+            file_path = payout_data[-1]
+            payout_tuple = payout_data[:-1]
+            result = self.dm.create_payout_record(file_path, payout_tuple)
+
+            if result == 'ok':
+                self.__clear_new_tab()
+                self.tab_control.select(self.reports_tab)
+                self.__view_all_payout_records()
+                messagebox.showinfo(title, msg1)
+            else:
+                messagebox.showerror(title, msg2 + result)
         else:
-            messagebox.showerror(title, msg2 + result)
+            messagebox.showerror(title, msg3)
    
     def cancel_upload_command(self):
         self.__clear_new_tab()
@@ -93,7 +91,7 @@ class Payout2PDF:
         msg = "Are you sure you want to delete this record?"
 
         if messagebox.askyesno(title, msg):
-            self.db.delete(self.selected_tuple[0])
+            self.db.delete(self.selected_tuple[0:4])
             self.__view_all_payout_records()
 
     def __get_selected_row(self, event):
@@ -103,20 +101,20 @@ class Payout2PDF:
         except IndexError:
             messagebox.showerror("Select Error", "Unable to select row.") 
 
+    def __print_row(self, row):
+        date = self.__format_date(row[11])
+        n1 = 10 - len(str(row[0]))
+        n2 = 25 - len(date)
+        row_data =   str(row[0]) + " " * n1 + date + " " * n2 + row[5]
+        self.listbox.insert(END, row_data)
+
     def __select_folder(self):
         return filedialog.askdirectory()
 
     def __view_all_payout_records(self):
         self.listbox.delete(0, END)
         for row in self.db.view_all():
-            self.listbox.insert(
-                    END, 
-                    str(row[0]) 
-                    + " " * 5  
-                    + self.__format_date(row[11]) 
-                    + " " * 8 
-                    + row[5]
-                )
+            self.__print_row(row)    
 
     def __format_date(self, date):
         try:

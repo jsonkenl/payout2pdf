@@ -73,16 +73,12 @@ class Database:
         try:
             conn = sqlite3.connect(db_file)
             return conn
-        except Error as e:
-            print(e)
+        except:
             return None
 
     def __create_table(self, create_table_statement):
-        try:
-            c = self.conn.cursor()
-            c.execute(create_table_statement)
-        except Error as e:
-            print(e)
+        c = self.conn.cursor()
+        c.execute(create_table_statement)
 
     def __payout_table(self):
         return ('CREATE TABLE IF NOT EXISTS payouts ('

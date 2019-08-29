@@ -31,11 +31,11 @@ class GeneratePDF:
             ])
         self.__set_font(8)
         self.__centered_text([
-                (265, 433, str(payout_data[6]) + '%'),
-                (265, 420, str(payout_data[7]) + '%'),
-                (265, 407, str(payout_data[8]) + '%'),
-                (265, 394, str(payout_data[9]) + '%'),
-                (265, 381, str(payout_data[10]) + '%')
+                (265, 433, str(int(payout_data[6])) + '%'),
+                (265, 420, str(int(payout_data[7])) + '%'),
+                (265, 407, str(int(payout_data[8])) + '%'),
+                (265, 394, str(int(payout_data[9])) + '%'),
+                (265, 381, str(int(payout_data[10])) + '%')
             ])
         self.__right_text([
                 (365, 622, self.__currency(well_data[4])),
@@ -130,7 +130,6 @@ class GeneratePDF:
     def __right_text(self, text_list):
         for t in text_list:
             self.c.drawRightString(t[0], t[1], t[2])
-
 
     def __draw_lines(self, coordinate_list):
         for c in coordinate_list:

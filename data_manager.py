@@ -13,8 +13,7 @@ class DataManager:
             payout_id = self.db.insert_payout(payout_data)
             self.__import_file_to_db(file_path, payout_id)
             return 'ok'
-        except Exception as e:
-            print(e)
+        except:
             return 'DataImportError'
 
     def create_pdf(self, folder_path, payout_id):
@@ -39,8 +38,7 @@ class DataManager:
 
             pdf.output_file()
             return 'ok'
-        except Exception as e:
-            print(e)
+        except:
             return 'PDFCreationError'
 
     def __import_file_to_db(self, file_path, payout_id):
@@ -68,6 +66,5 @@ class DataManager:
             return 'FileNotFoundError'
         except XLRDError:
             return 'XLRDError'
-        except Exception as e:
-            print(e)
+        except:
             return 'UnknownImportError' 
